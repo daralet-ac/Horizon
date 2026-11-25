@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Horizon</RootNamespace>
+    <AssemblyName>Horizon</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>Horizon</Product>
+    <OutputPath>..\..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- UtilityBelt.Service is built against Decal.Adapter 2.9.8.0 while Decal 2.9.8.3 installs 2.9.7.5. The game only ever
+         has the installed one loaded, so the mismatch doesn't matter. -->
+    <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Decal.Adapter">
+      <HintPath>..\..\deps\Decal.Adapter.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <!-- UtilityBelt.Service's dat readers (ACE.DatLoader). Installed with UtilityBelt.Service, next to it, so only
+         referenced for compiling: this copy is from 2.2.12. -->
+    <Reference Include="UtilityBelt.Common">
+      <HintPath>..\..\deps\UtilityBelt.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <!-- Managed DirectX, which UtilityBelt.Service needs and so is installed wherever it is: the device, its camera,
+         textures and buffers. -->
+    <Reference Include="Microsoft.DirectX.Direct3D">
+      <HintPath>$(WINDIR)\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\Microsoft.DirectX.Direct3D.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.DirectX">
+      <HintPath>$(WINDIR)\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\Microsoft.DirectX.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- GoArrow's locations.xml, for where towns are (grass is kept short near them) -->
+    <EmbeddedResource Include="Resources\locations.xml" LogicalName="Horizon.Resources.locations.xml" />
+    <!-- the game's own UI pictures: the option slider's track and thumb -->
+    <EmbeddedResource Include="Resources\ui\*.png" LogicalName="Horizon.Resources.ui.%(Filename)%(Extension)" />
+    <!-- WithCulture: MSBuild took shading.ps.cso's "ps" for a language and put it in a satellite dll -->
+    <EmbeddedResource Include="Resources\shaders\*.cso" LogicalName="Horizon.Resources.shaders.%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- UtilityBelt.Service is installed on the client separately, so it's only referenced for compiling. -->
+    <PackageReference Include="UtilityBelt.Service" Version="2.2.12">
+      <ExcludeAssets>runtime; build; contentFiles</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

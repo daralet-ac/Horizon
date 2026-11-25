@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Horizon.Loader</RootNamespace>
+    <AssemblyName>Horizon.Loader</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>Horizon hot-reload loader</Product>
+    <OutputPath>..\..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- The game holds the loader open, so it must come out the same until its own code changes. By default the SDK
+         writes the git commit into the version and the pdb (SourceLink), so every commit made a new dll that couldn't be
+         copied over the one the game had loaded (MSB3027). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <EnableSourceLink>false</EnableSourceLink>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Decal.Adapter">
+      <HintPath>..\..\deps\Decal.Adapter.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Decal.Interop.Core">
+      <HintPath>..\..\deps\Decal.Interop.Core.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

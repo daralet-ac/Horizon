@@ -1,0 +1,16 @@
+# build output
+[Bb]in/
+[Oo]bj/
+# the installer (installer/Horizon.iss, once there is one)
+out/
+TestResults/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.rsuser
+
+# written next to the dll by the plugin and loader
+log.txt

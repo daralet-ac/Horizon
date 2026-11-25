@@ -1,0 +1,35 @@
+Horizon, a Decal plugin for Asheron's Call that draws the world further and lights it better
+Copyright (C) 2026 The Daralet developers
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program, in the file LICENSE. If not,
+see <https://www.gnu.org/licenses/>.
+
+The source code is at <https://github.com/daralet-ac/Horizon>. It began as part of Daralet Toolkit
+(<https://github.com/daralet-ac/daralet-toolkit>), under the same license.
+
+
+Additional permission under GNU GPL version 3 section 7
+
+If you modify this program, or any covered work, by linking or combining it with Decal (including Decal.Adapter and
+Decal.Interop.Core), UtilityBelt.Service, Managed DirectX or the Asheron's Call client (or a modified version of any of
+them), containing parts covered by the terms of their own licenses, the licensors of this program grant you additional
+permission to convey the resulting work.
+
+
+Not covered by this license
+
+These are in this repository, or built into or shipped with the plugin, but aren't the Daralet developers' work. They
+keep their own owners' terms:
+
+- deps/Decal.Adapter.dll and deps/Decal.Interop.Core.dll: from Decal 2.9.8.3.
+- deps/UtilityBelt.Common.dll: from UtilityBelt.Service 2.2.12, under the MIT License. Only compiled against; the copy
+  installed with UtilityBelt.Service is used.
+- src/Horizon/Resources/ui/*.png: pictures taken from the Asheron's Call client.
+- src/Horizon/Resources/locations.xml: GoArrow's locations, in Daralet edition.
