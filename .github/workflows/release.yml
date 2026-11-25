@@ -74,7 +74,7 @@ jobs:
             $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           }
           $nuget = if ($env:NUGET_PACKAGES) { $env:NUGET_PACKAGES } else { "$env:USERPROFILE\.nuget\packages" }
-          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "/DUBServiceInstaller=$nuget\utilitybelt.service\2.2.12\content\UtilityBelt.Service.Installer.exe" installer\DaraletToolkit.iss
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "/DUBServiceInstaller=$nuget\utilitybelt.service\2.2.12\content\UtilityBelt.Service.Installer.exe" installer\Horizon.iss
           if ($LASTEXITCODE -ne 0) { throw "iscc failed" }
 
       - uses: actions/upload-artifact@v4
