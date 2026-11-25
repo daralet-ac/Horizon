@@ -98,10 +98,11 @@ namespace Horizon.Ui {
         /// <param name="padding">The room round what's in it, instead of the style's.</param>
         /// <param name="textScale">A text size of its own, on top of the window's Size and the Text size.</param>
         /// <param name="minSize">For a window you size yourself, the smallest it may be (300 by 200 if not given).</param>
+        /// <param name="showInBar">A button on UtilityBelt's bar that shows and hides it (the Horizon window).</param>
         public FloatingWindow(string id, string title, Settings settings, Vector2 defaultPosition, Action render,
             bool visibleByDefault = true, Vector2? defaultSize = null, Func<object> inUse = null, bool alwaysOnlyInUse = false,
             Action onClose = null, Action menuItems = null, Vector2? padding = null, Func<float> textScale = null,
-            Vector2? minSize = null) {
+            Vector2? minSize = null, bool showInBar = false) {
             this.id = id;
             this.settings = settings;
             this.defaultPosition = defaultPosition;
@@ -125,11 +126,12 @@ namespace Horizon.Ui {
             Showing.Add(this);
 
             hud = UBService.Huds.CreateHud(title);
-            hud.ShowInBar = false;
+            hud.ShowInBar = showInBar;
             hud.Visible = false;
             hud.OnPreRender += Hud_OnPreRender;
             hud.OnRender += Hud_OnRender;
             hud.OnHide += Hud_OnHide;
+            hud.OnShow += Hud_OnShow;
 
             CoreManager.Current.RenderFrame += Core_RenderFrame;
         }
@@ -925,6 +927,23 @@ namespace Horizon.Ui {
         }
 
         /// <summary>
+        /// Shown by UtilityBelt's bar button (showInBar), not by Core_RenderFrame: the setting follows, or the next frame
+        /// would hide it again.
+        /// </summary>
+        private void Hud_OnShow(object sender, EventArgs e) {
+            try {
+                if (settingVisibility) {
+                    return;
+                }
+
+                Visible = true;
+            }
+            catch (Exception ex) {
+                PluginCore.Log(ex);
+            }
+        }
+
+        /// <summary>
         /// Puts the window where its placement says, size and all, on the next frame: for its placement changed behind it
         /// (a window taken out of the shared window, given the shared place as its own).
         /// </summary>
@@ -942,6 +961,7 @@ namespace Horizon.Ui {
             hud.OnPreRender -= Hud_OnPreRender;
             hud.OnRender -= Hud_OnRender;
             hud.OnHide -= Hud_OnHide;
+            hud.OnShow -= Hud_OnShow;
             hud.Visible = false;
             hud.Dispose();
             UiThemeStyle.Restore();

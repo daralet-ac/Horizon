@@ -44,7 +44,8 @@ dotnet test tests/Horizon.Tests/Horizon.Tests.csproj
 ## The plugin's own pieces
 
 - **The Horizon window** (`Ui/GraphicsPanel*.cs`, window `horizon`, hidden to start, shown and hidden with `/horizon` or
-  `@horizon`): every graphics setting, the Budget section (presets, the two bars, Apply) pinned at the top and the
+  `@horizon`, or its button on UtilityBelt's bar, `FloatingWindow`'s `showInBar`: the bar sets the hud's Visible
+  itself, which `Hud_OnShow` and `Hud_OnHide` pass on to the setting, or the next frame would undo it): every graphics setting, the Budget section (presets, the two bars, Apply) pinned at the top and the
   sections scrolling under it, then a Horizon section (Text size, crash records). `GraphicsPanel` also makes and owns
   every graphics piece (`DrawDistance`, `FrameRateWindow`, `Grass`, `FarLand`, `DepthShading`, `TestRunner`), which run
   whether or not the window shows, and lets each go on its own at shutdown.

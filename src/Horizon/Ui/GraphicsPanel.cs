@@ -27,7 +27,7 @@ namespace Horizon.Ui {
             depthShading = new DepthShading(settings);
             testRunner = new TestRunner(settings, drawDistance, Commit);
             window = new FloatingWindow("horizon", "Horizon", settings, new Vector2(120, 120), Render,
-                visibleByDefault: false, defaultSize: new Vector2(520, 640));
+                visibleByDefault: false, defaultSize: new Vector2(520, 640), showInBar: true);
         }
 
         public FloatingWindow Window => window;
