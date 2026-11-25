@@ -27,6 +27,8 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <!-- HttpClient, for the update check (Feed/UpdateCheck.cs) -->
+    <Reference Include="System.Net.Http" />
     <!-- Managed DirectX, which UtilityBelt.Service needs and so is installed wherever it is: the device, its camera,
          textures and buffers. -->
     <Reference Include="Microsoft.DirectX.Direct3D">

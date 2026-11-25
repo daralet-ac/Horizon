@@ -56,6 +56,25 @@ dotnet test tests/Horizon.Tests/Horizon.Tests.csproj
   after the last change. A renamed setting keeps its old `DataMember` name, or players lose it.
 - **Everything the plugin writes** goes in `Documents\Decal Plugins\Horizon` (`DataFolder`): `settings.json`, `log.txt`,
   `Frame Rate Logs`, `Test Runs`.
+- **The installer** (`installer/Horizon.iss`, Inno Setup 6, built and released by `.github/workflows/release.yml` on a
+  `v*` tag that must match the csproj's `<Version>`; run by hand from the Actions tab it only builds, the files under the
+  run's artifacts): Daralet Toolkit's installer with Horizon's names. It copies `Horizon.dll` and writes Decal's entry
+  itself (`(Default)`, `Enabled`, `Object` `Horizon.PluginCore`, `Assembly`, `Path`, and `Surrogate`
+  `{71A69713-6593-47EC-0002-0000000DECA1}`, Decal's .NET plugin host) under 32-bit `HKLM\SOFTWARE\Decal\Plugins\{guid}`.
+  Its default folder is the `Path` of an entry already there. It stops while `acclient.exe` or `DenAgent.exe` runs,
+  warns when .NET 4.8 or Decal 2.9.8 isn't found, and runs UtilityBelt.Service's installer (from its NuGet package's
+  `content/`) when Decal has no Services entry for it. Uninstalling removes the entry and offers to delete the data
+  folder. Its `AppId` (`f209cff6-7c4a-465f-ba2f-6e90964f3cc7`) is how a new installer upgrades the old install: never
+  change it. The workflow installs Managed DirectX first, both `Microsoft.DirectX.dll` and `Direct3D`, which runners
+  lack; a release's notes come from `release-notes/<tag>.md`, else GitHub's list of merged pull requests.
+- **New versions** (`Feed/UpdateCheck.cs`, `Ui/GraphicsPanel.Update.cs`): Daralet Toolkit's update check, pointed at
+  `daralet-ac/Horizon`. At start, once and off the game's thread, it asks GitHub's API for the latest release (never a
+  draft or pre-release) and compares its tag with the assembly's version, both made four-part. A newer one gets a line in
+  chat once logged in, with a link to the release page, and an Update button above the budget; the Horizon section shows
+  the version you have, with the check's result as its tooltip. Chat links carry `PluginCore.ChatLinkId` ("Horz", not the
+  Toolkit's), and a click only opens Horizon's release pages (`UpdateCheck.IsReleasePage`), since anyone can put the id
+  in a tell. It only tells: the player runs the new installer. Unauthenticated, GitHub allows 60 requests an hour from
+  one address.
 - **The game's UI pictures** (`Resources/ui`, drawn by `Art.DrawArtBox`): the option slider's track and thumb
   (`option-slider*.png`, `Sliders`) and the gold close button (`indicator-logout*.png`, `FloatingWindow.Close`).
   Drop-downs and scroll bars are ImGui's own here (the Toolkit draws the game's).

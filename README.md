@@ -27,6 +27,13 @@ Type `/horizon` in chat to open the window.
   its window with UtilityBelt.Service, which is a separate install from UtilityBelt itself.
 - **.NET Framework 4.8.**
 
+## Installing
+
+Close the game and the Decal agent, then download and run `Horizon-Setup-<version>.exe` from the
+[latest release](https://github.com/daralet-ac/Horizon/releases/latest). It installs Horizon, ticks it under Plugins in
+the Decal agent, and installs UtilityBelt.Service if you don't have it. To update, run the newer installer the same way:
+Horizon says in chat when a new version is out, and your settings are kept.
+
 ## Installing by hand
 
 1. **Install UtilityBelt.Service**, even if you already have UtilityBelt: UtilityBelt's installer doesn't include it.

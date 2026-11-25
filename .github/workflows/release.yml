@@ -1,0 +1,101 @@
+# Builds the plugin and its installer (installer/Horizon.iss) and publishes them as a release. Runs when a v* tag is
+# pushed, which has to match <Version> in src/Horizon/Horizon.csproj (v0.4.0 for 0.4.0). Run by hand from
+# the Actions tab (Run workflow) it only builds, and the files are under the run's artifacts, to try before tagging.
+#
+# The release gets Horizon-Setup-<version>.exe and, for anyone installing by hand, Horizon.dll. A release made on GitHub
+# with a new tag (its tag starts this) keeps its notes and gets the files added; one this makes itself takes its notes
+# from release-notes/<tag>.md, or GitHub's list of merged pull requests without one.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MSBUILDDISABLENODEREUSE: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the version
+        id: version
+        shell: pwsh
+        run: |
+          $proj = Get-Content src/Horizon/Horizon.csproj -Raw
+          if ($proj -notmatch '<Version>([^<]+)</Version>') { throw "No <Version> in Horizon.csproj" }
+          $version = $Matches[1]
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") {
+            throw "The tag is $env:GITHUB_REF_NAME but Horizon.csproj says ${version}: bump <Version> or tag v$version"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # The plugin references Managed DirectX from %WINDIR% (see Horizon.csproj), which runners don't have. It
+      # comes with the DirectX End-User Runtime (June 2010).
+      - name: Install Managed DirectX
+        shell: pwsh
+        run: |
+          $dir = "$env:WINDIR\Microsoft.NET\DirectX for Managed Code\1.0.2902.0"
+          if (-not (Test-Path "$dir\Microsoft.DirectX.Direct3D.dll")) {
+            Invoke-WebRequest https://download.microsoft.com/download/8/4/A/84A35BF1-DAFE-4AE8-82AF-AD2AE20B6B14/directx_Jun2010_redist.exe -OutFile dx.exe
+            Start-Process -Wait .\dx.exe -ArgumentList '/Q', "/T:$env:RUNNER_TEMP\dx"
+            Start-Process -Wait "$env:RUNNER_TEMP\dx\DXSETUP.exe" -ArgumentList '/silent'
+          }
+          # DXSETUP puts them in the GAC; copy each where the project looks if it didn't land there too. Horizon needs
+          # Microsoft.DirectX.dll as well as Direct3D (the Toolkit only Direct3D)
+          foreach ($name in 'Microsoft.DirectX.Direct3D.dll', 'Microsoft.DirectX.dll') {
+            if (Test-Path "$dir\$name") { continue }
+            $found = Get-ChildItem "$env:WINDIR\assembly" -Recurse -Filter $name -ErrorAction SilentlyContinue |
+              Where-Object { $_.VersionInfo.FileVersion -like '*2902*' -or $_.DirectoryName -like '*1.0.2902.0*' } | Select-Object -First 1
+            if (-not $found) { throw "Managed DirectX 1.0.2902.0 ($name) didn't install" }
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            Copy-Item $found.FullName $dir
+          }
+
+      - name: Build
+        run: dotnet build Horizon.sln -c Release -nodeReuse:false
+
+      - name: Test
+        run: dotnet test tests/Horizon.Tests/Horizon.Tests.csproj -c Release -nodeReuse:false
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          $nuget = if ($env:NUGET_PACKAGES) { $env:NUGET_PACKAGES } else { "$env:USERPROFILE\.nuget\packages" }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "/DUBServiceInstaller=$nuget\utilitybelt.service\2.2.12\content\UtilityBelt.Service.Installer.exe" installer\DaraletToolkit.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: horizon-${{ steps.version.outputs.version }}
+          path: |
+            out/Horizon-Setup-${{ steps.version.outputs.version }}.exe
+            bin/Horizon.dll
+
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $files = "out/Horizon-Setup-${{ steps.version.outputs.version }}.exe", "bin/Horizon.dll"
+          # a release made on GitHub with a new tag starts this workflow too: then only add the files, keeping its notes
+          gh release view "$env:GITHUB_REF_NAME" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload "$env:GITHUB_REF_NAME" @files --clobber
+          } else {
+            $notes = "release-notes/$env:GITHUB_REF_NAME.md"
+            $notesArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
+            gh release create "$env:GITHUB_REF_NAME" @files --title "Horizon ${{ steps.version.outputs.version }}" @notesArgs --latest
+          }
+          if ($LASTEXITCODE -ne 0) { throw "publishing the release failed" }

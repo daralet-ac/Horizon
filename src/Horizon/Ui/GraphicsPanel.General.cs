@@ -12,6 +12,7 @@ namespace Horizon.Ui {
                 return;
             }
 
+            RenderVersionRow();
             Form.Label("Text size", "The size of the text in Horizon's windows.");
             var scale = settings.Data.ClampedTextScale * 100;
             ImGui.SetNextItemWidth(Form.ControlWidth);

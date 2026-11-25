@@ -33,6 +33,7 @@ namespace Horizon.Ui {
         /// </summary>
         public void RenderGraphics() {
             RefreshDraft();
+            RenderUpdateRow();
             Form.Section("Budget");
             RenderBudget();
             RenderApplyRow();

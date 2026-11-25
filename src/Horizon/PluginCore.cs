@@ -14,8 +14,16 @@ namespace Horizon {
         // System.IO.Path is written out in full in here: PluginBase has a Path property of its own
         private static string assemblyDirectory;
 
+        /// <summary>
+        /// The id in the plugin's chat links, handed back by ChatNameClicked: any fixed number other plugins don't use
+        /// ("Horz"; Daralet Toolkit's is "Dara").
+        /// </summary>
+        private const int ChatLinkId = 0x486F727A;
+
         private Settings settings;
         private GraphicsPanel panel;
+        private UpdateCheck updates;
+        private bool updateAnnounced;
 
         /// <summary>In minimal mode (Test Runs\minimal.txt), the only thing running.</summary>
         private TestRunner minimalRunner;
@@ -62,9 +70,12 @@ namespace Horizon {
                     return;
                 }
 
-                panel = new GraphicsPanel(settings);
+                updates = new UpdateCheck(typeof(PluginCore).Assembly.GetName().Version);
+                updates.Start();
+                panel = new GraphicsPanel(settings) { Updates = updates };
                 CoreManager.Current.CommandLineText += Core_CommandLineText;
                 CoreManager.Current.RenderFrame += Core_RenderFrame;
+                CoreManager.Current.ChatNameClicked += Core_ChatNameClicked;
             }
             catch (Exception ex) {
                 Log(ex);
@@ -77,8 +88,10 @@ namespace Horizon {
             ShutdownStep(() => {
                 CoreManager.Current.CommandLineText -= Core_CommandLineText;
                 CoreManager.Current.RenderFrame -= Core_RenderFrame;
+                CoreManager.Current.ChatNameClicked -= Core_ChatNameClicked;
             });
             ShutdownStep(() => panel?.Dispose());
+            ShutdownStep(() => updates?.Dispose());
             ShutdownStep(() => settings?.SaveIfChanged());
             ShutdownStep(TimeOfDay.Release);
             ShutdownStep(Art.Free);
@@ -99,6 +112,46 @@ namespace Horizon {
             try {
                 SessionLog.Frame(settings);
                 settings.SaveIfDue();
+                AnnounceUpdate();
+            }
+            catch (Exception ex) {
+                Log(ex);
+            }
+        }
+
+        /// <summary>Says once in chat that a newer version is out, after login: a line added before then never shows.</summary>
+        private void AnnounceUpdate() {
+            var newer = updates?.Newer;
+
+            if (updateAnnounced || newer == null || CoreManager.Current.CharacterFilter.LoginStatus != 3) {
+                return;
+            }
+
+            updateAnnounced = true;
+            var text = $"Horizon {newer.Version.ToString(3)} is out (you have {updates.Current.ToString(3)}).";
+            LogFile(text);
+
+            try {
+                // a link in chat, as UtilityBelt's update notice has: clicking it comes back as Core_ChatNameClicked
+                CoreManager.Current.Actions.AddChatText($"[Horizon] {text} <Tell:IIDString:{ChatLinkId}:openurl|{newer.Url}>Download it</Tell>, then close the game and run its installer. The Update button at the top of the /horizon window opens the same page.", 1);
+            }
+            catch {
+            }
+        }
+
+        /// <summary>A click on one of the plugin's chat links. Anyone can put this id in a tell, so only its release pages open.</summary>
+        private void Core_ChatNameClicked(object sender, ChatClickInterceptEventArgs e) {
+            try {
+                if (e.Id != ChatLinkId) {
+                    return;
+                }
+
+                e.Eat = true;
+                var parts = (e.Text ?? "").Split(new[] { '|' }, 2);
+
+                if (parts.Length == 2 && parts[0] == "openurl" && UpdateCheck.IsReleasePage(parts[1])) {
+                    System.Diagnostics.Process.Start(parts[1]);
+                }
             }
             catch (Exception ex) {
                 Log(ex);
